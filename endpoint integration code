@@ -1,0 +1,42 @@
+for url in payload.urls:
+    try:
+        # Call  crawler function for each URL
+        html_content = await scraper(url)
+        
+        # Process the crawled content (convert HTML to markdown)
+        markdown_content = convert_html_to_markdown(html_content)
+        
+        # Create filename using URL; may change 
+        clean_url = url.replace('https://', '').replace('http://', '').replace('/', '_').replace(':', '')
+        filename = f"crawled_{clean_url}.md"
+        
+        # Create file object to match the expected format
+        crawled_file_obj = {
+            "content": markdown_content,
+            "filename": filename,
+            "source_url": url,
+            "content_type": "text/markdown"
+        }
+        
+        # Add it to files_output list
+        files_output.append(crawled_file_obj)
+        
+        logger.info(f"Successfully crawled and processed URL: {url}")
+        
+    except Exception as e:
+        logger.error(f"Failed to crawl URL {url}: {str(e)}")
+        # Continue with next URL instead of failing completely
+        continue
+
+    # Create space_object for this URL (similar to file processing)
+    space_object = SpaceSourceObject(
+        space_id=space_id,
+        execution_id=execution.id,
+        source_type="url",
+        name=url,
+        created_by=user_id,
+        updated_by=user_id,
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
+    )
+    write_db.add(space_object)
